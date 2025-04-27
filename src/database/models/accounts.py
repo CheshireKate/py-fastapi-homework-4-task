@@ -150,7 +150,7 @@ class UserProfileModel(Base):
     info: Mapped[Optional[str]] = mapped_column(Text)
 
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     user: Mapped[UserModel] = relationship("UserModel", back_populates="profile")
 
@@ -212,7 +212,7 @@ class RefreshTokenModel(TokenBaseModel):
 
     user: Mapped[UserModel] = relationship("UserModel", back_populates="refresh_tokens")
     token: Mapped[str] = mapped_column(
-        String(512), unique=True, nullable=False, default=generate_secure_token
+        String(64), unique=True, nullable=False, default=generate_secure_token
     )
 
     @classmethod

@@ -3,6 +3,8 @@ from datetime import date
 from fastapi import UploadFile, Form, File, HTTPException
 from pydantic import BaseModel, field_validator, HttpUrl
 
+from database import ActivationTokenModel
+from schemas.accounts import PasswordResetSchema, TokenRefreshSchema, ActivationTokenSchema
 from src.validation import (
     validate_name,
     validate_image,
@@ -15,10 +17,10 @@ class UserProfileSchema(BaseModel):
     id: int
     first_name: str
     last_name: str
-    avatar: UploadFile
+    avatar: str
     gender: str
     date_of_birth: date
-    info: str
+    info: str | None = None
 
     @field_validator("first_name")
     @classmethod
@@ -29,11 +31,6 @@ class UserProfileSchema(BaseModel):
     @classmethod
     def validate_last_name(cls, value: str):
         validate_name(value)
-
-    @field_validator("avatar")
-    @classmethod
-    def validate_avatar_image(cls, value: UploadFile):
-        validate_image(value)
 
     @field_validator("gender")
     @classmethod
@@ -46,10 +43,6 @@ class UserProfileSchema(BaseModel):
         validate_birth_date(value)
 
 
-class GroupSchema:
-    pass
-
-
 class UserSchema(BaseModel):
     id: int
     email: str
@@ -58,10 +51,10 @@ class UserSchema(BaseModel):
     created_at: date
     updated_at: date
     group_id: int
-    group: list[GroupSchema]
-    activation_token: str
-    password_reset_token: str
-    refresh_tokens: str
+    group: str
+    activation_token: ActivationTokenSchema
+    password_reset_token: PasswordResetSchema
+    refresh_tokens: TokenRefreshSchema
     profile: UserProfileSchema
 
 

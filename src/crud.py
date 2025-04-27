@@ -6,6 +6,6 @@ from src.database import UserModel
 
 
 async def get_user_by_id(user_id: int, db: AsyncSession = Depends(get_db)):
-    user = db.execute(UserModel).filter(UserModel.id == user_id).first()
+    user = await db.execute(UserModel).filter(UserModel.id == user_id).first()
 
     return user
