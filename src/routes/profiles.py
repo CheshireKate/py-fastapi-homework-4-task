@@ -1,5 +1,3 @@
-from http.client import HTTPException
-
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
@@ -15,17 +13,19 @@ from storages import S3StorageInterface
 
 router = APIRouter()
 
-@router.post( "/users/{user_id}/profile/", response_model=UserCreate)
+
+@router.post("/users/{user_id}/profile/", response_model=UserCreate)
 async def user_profile_create(
-        token: str,
-        user_id: int,
-        db: AsyncSession = Depends(get_db),
-        jwt_manager: JWTAuthManagerInterface = Depends(get_jwt_auth_manager)
+    token: str,
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    jwt_manager: JWTAuthManagerInterface = Depends(get_jwt_auth_manager),
+    s3_client: S3StorageInterface = Depends(get_s3_storage_client),
 ):
     if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authorization header is missing"
+            detail="Authorization header is missing",
         )
 
     jwt_manager.verify_access_token_or_raise(token)
@@ -36,29 +36,29 @@ async def user_profile_create(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found or not active."
+            detail="User not found or not active.",
         )
 
     if user.activation_token != token:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to edit this profile."
+            detail="You don't have permission to edit this profile.",
         )
 
     if user.profile:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User already has a profile."
+            detail="User already has a profile.",
         )
     try:
-        s3_client: S3StorageInterface = Depends(get_s3_storage_client)
-    except HTTP_500_INTERNAL_SERVER_ERROR:
-        "Failed to upload avatar. Please try again later."
+        await s3_client.upload_file(f"{user_id}.filename", user.avatar)
+    except Exception as e:
+        raise HTTPException(
+            status_code=HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to upload avatar. Please try again later.",
+        )
 
     await db.commit()
-    await db.refresh()
+    await db.refresh(user.profile)
 
     return user.profile
-
-
-

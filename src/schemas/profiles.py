@@ -7,7 +7,7 @@ from src.validation import (
     validate_name,
     validate_image,
     validate_gender,
-    validate_birth_date
+    validate_birth_date,
 )
 
 
@@ -15,7 +15,7 @@ class UserProfileSchema(BaseModel):
     id: int
     first_name: str
     last_name: str
-    avatar: str
+    avatar: UploadFile
     gender: str
     date_of_birth: date
     info: str
@@ -46,6 +46,10 @@ class UserProfileSchema(BaseModel):
         validate_birth_date(value)
 
 
+class GroupSchema:
+    pass
+
+
 class UserSchema(BaseModel):
     id: int
     email: str
@@ -54,11 +58,12 @@ class UserSchema(BaseModel):
     created_at: date
     updated_at: date
     group_id: int
-    group: list
+    group: list[GroupSchema]
     activation_token: str
     password_reset_token: str
     refresh_tokens: str
     profile: UserProfileSchema
+
 
 class UserCreate(UserSchema):
     pass
